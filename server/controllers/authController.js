@@ -34,23 +34,50 @@ exports.register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
     user = new User({
       name,
       email,
       passwordHash,
-      isVerified: true
+      isVerified: false,
+      otp,
+      otpExpires
     });
 
     await user.save();
 
-    // Auto-login after registration
-    const payload = { user: { id: user.id } };
-    const token = jwt.sign(payload, process.env.JWT_SECRET || 'supersecretjwt', { expiresIn: '5d' });
+    // Attempt to send real email if configured, otherwise fallback to console log
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      try {
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+          }
+        });
 
-    res.status(201).json({ 
-      token, 
-      user: { id: user.id, name: user.name, email: user.email, role: user.role } 
-    });
+        await transporter.sendMail({
+          from: process.env.EMAIL_USER,
+          to: email,
+          subject: 'Code100x - Verify Your Email',
+          text: `Your OTP for Code100x is: ${otp}. It will expire in 10 minutes.`,
+          html: `<h3>Welcome to Code100x!</h3><p>Your OTP is: <strong>${otp}</strong></p><p>It will expire in 10 minutes.</p>`
+        });
+      } catch (emailErr) {
+        console.error('Failed to send real email, but continuing registration:', emailErr);
+      }
+    } else {
+      console.log(`\n\n=========================================\n`);
+      console.log(`🔐 MOCK EMAIL SENT TO: ${email}`);
+      console.log(`🔑 OTP CODE: ${otp}`);
+      console.log(`\n=========================================\n\n`);
+    }
+
+    res.status(201).json({ message: 'Registration successful. Please verify your email.', email });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
@@ -64,6 +91,14 @@ exports.login = async (req, res) => {
     let user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    if (!user.passwordHash) {
+      return res.status(400).json({ message: 'This email is registered with Google. Please use "Sign in with Google".' });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({ message: 'Please verify your email before logging in.', unverified: true });
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);

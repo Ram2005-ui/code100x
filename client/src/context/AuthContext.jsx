@@ -35,10 +35,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password) => {
-    const res = await axios.post('/api/auth/register', { name, email, password });
-    localStorage.setItem('token', res.data.token);
-    setUser(res.data.user);
-    return res;
+    try {
+      const res = await axios.post('/api/auth/register', { name, email, password });
+      return res.data; // Return the response for the OTP screen
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   };
 
   const verifyOtp = async (email, otp) => {
