@@ -21,37 +21,7 @@ const runCode = async (languageId, code, stdin, testCaseIndex = 0) => {
   const config = LANGUAGE_CONFIG[languageId];
   if (!config) throw new Error(`Unsupported language: ${languageId}`);
 
-  if (languageId === 54) {
-    try {
-      console.log(`[Test ${testCaseIndex}] Running C++ via Piston API`);
-      const res = await fetch('https://emkc.org/api/v1/piston/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          language: 'cpp',
-          source: code,
-          stdin: stdin || ''
-        })
-      });
-      const data = await res.json();
-      
-      console.log(`[Test ${testCaseIndex}] stdout: ${data.stdout || '(empty)'}`);
-      
-      if (data.stderr && data.stderr.length > 0) {
-        console.error(`[Test ${testCaseIndex}] Execution error:`, data.stderr);
-        const errorLower = data.stderr.toLowerCase();
-        const isCompilationError = errorLower.includes('error:') || 
-                                   errorLower.includes('undefined reference') ||
-                                   errorLower.includes('syntax error');
-        return { stdout: data.stdout || '', error: data.stderr, isCompilation: isCompilationError };
-      }
-      
-      return { stdout: data.stdout || '', error: null };
-    } catch (err) {
-      console.error(`[Test ${testCaseIndex}] Piston API error:`, err);
-      return { stdout: '', error: err.message, isCompilation: false };
-    }
-  }
+  // Execute everything locally since Render supports g++ for C++, node for JS, and python3 for Python.
 
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'code100x-'));
 
