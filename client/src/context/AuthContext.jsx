@@ -35,8 +35,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password) => {
-    // We now just send the register request. The user is not yet verified.
-    return await axios.post('/api/auth/register', { name, email, password });
+    const res = await axios.post('/api/auth/register', { name, email, password });
+    localStorage.setItem('token', res.data.token);
+    setUser(res.data.user);
+    return res;
   };
 
   const verifyOtp = async (email, otp) => {

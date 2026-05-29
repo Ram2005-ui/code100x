@@ -25,8 +25,7 @@ const Register = () => {
     setError('');
     try {
       await register(name, email, password);
-      // Instead of navigating, show OTP screen
-      setShowOtp(true);
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {
