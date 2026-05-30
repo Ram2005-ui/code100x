@@ -230,7 +230,14 @@ exports.submitCode = async (req, res) => {
 
         if (io) {
           console.log(`[${submissionId}] Emitting status to room submission_${submissionId}`);
-          io.to(`submission_${submissionId}`).emit('submission_status_changed', { submissionId, status: overallStatus });
+          // Emit to specific submission room (for normal problems)
+          io.to(`submission_${submissionId}`).emit('submission_status_changed', { submissionId, status: overallStatus, userId });
+          
+          // Emit to battle room to prevent race conditions (since client is already in this room)
+          if (battleId) {
+            io.to(`battle_${battleId}`).emit('submission_status_changed', { submissionId, status: overallStatus, userId });
+          }
+
           if (overallStatus === 'Accepted') {
             console.log(`[${submissionId}] Accepted! Emitting leaderboard update`);
             io.emit('leaderboard_update', { submissionId });

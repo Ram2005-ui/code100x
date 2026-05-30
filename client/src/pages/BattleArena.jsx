@@ -94,9 +94,12 @@ const BattleArena = () => {
       setTimerActive(false);
     });
 
-    socket.on('submission_status_changed', ({ submissionId, status }) => {
-      setRunResults({ overallStatus: status, results: [] });
-      setIsSubmitting(false);
+    socket.on('submission_status_changed', ({ submissionId, status, userId: subUserId }) => {
+      const currentUserId = user._id || user.id;
+      if (subUserId === currentUserId || !subUserId) {
+        setRunResults({ overallStatus: status, results: [] });
+        setIsSubmitting(false);
+      }
     });
 
     return () => {
