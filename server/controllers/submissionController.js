@@ -9,10 +9,10 @@ const Problem = require('../models/Problem');
 
 // Language configs: extension + run command template
 const LANGUAGE_CONFIG = {
-  71:  { ext: 'py',   run: (f) => `python "${f}"` },
+  71:  { ext: 'py',   run: (f) => `python3 "${f}"` },
   63:  { ext: 'js',   run: (f) => `node "${f}"` },
-  54:  { ext: 'cpp',  run: (f, bin) => `g++ -o "${bin}" "${f}" && "${bin}"`, compiled: true },
-  62:  { ext: 'java', run: (f, dir) => `cd "${dir}" && javac Main.java && java Main`, java: true },
+  54:  { ext: 'cpp',  compiler: 'gcc-head', useWandbox: true },
+  62:  { ext: 'java', compiler: 'openjdk-jdk-22+36', useWandbox: true },
 };
 
 const normalize = (str) => (str || '').trim().replace(/\r\n/g, '\n');
@@ -20,6 +20,47 @@ const normalize = (str) => (str || '').trim().replace(/\r\n/g, '\n');
 const runCode = async (languageId, code, stdin, testCaseIndex = 0) => {
   const config = LANGUAGE_CONFIG[languageId];
   if (!config) throw new Error(`Unsupported language: ${languageId}`);
+
+  // Use Wandbox API for C++ and Java
+  if (config.useWandbox) {
+    try {
+      console.log(`[Test ${testCaseIndex}] Running via Wandbox API`);
+      
+      // Wandbox Java hack: class cannot be public if file is named prog.java
+      let finalCode = code;
+      if (languageId === 62) {
+        finalCode = finalCode.replace(/public\s+class\s+Main/, 'class Main');
+      }
+
+      const res = await fetch('https://wandbox.org/api/compile.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          compiler: config.compiler,
+          code: finalCode,
+          stdin: stdin || ''
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (data.status !== '0' && data.compiler_error) {
+        console.error(`[Test ${testCaseIndex}] Compilation error:`, data.compiler_error);
+        return { stdout: '', error: data.compiler_error, isCompilation: true };
+      }
+      if (data.status !== '0' && data.program_error) {
+        console.error(`[Test ${testCaseIndex}] Runtime error:`, data.program_error);
+        return { stdout: '', error: data.program_error, isCompilation: false };
+      }
+      
+      console.log(`[Test ${testCaseIndex}] stdout: ${data.program_output || '(empty)'}`);
+      return { stdout: data.program_output || '', error: null };
+      
+    } catch (err) {
+      console.error(`[Test ${testCaseIndex}] Wandbox API error:`, err);
+      return { stdout: '', error: err.message, isCompilation: false };
+    }
+  }
 
   // Execute everything locally since Render supports g++ for C++, node for JS, and python3 for Python.
 
