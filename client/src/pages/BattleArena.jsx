@@ -94,9 +94,15 @@ const BattleArena = () => {
       setTimerActive(false);
     });
 
+    socket.on('submission_status_changed', ({ submissionId, status }) => {
+      setRunResults({ overallStatus: status, results: [] });
+      setIsSubmitting(false);
+    });
+
     return () => {
       socket.off('battle_progress');
       socket.off('battle_over');
+      socket.off('submission_status_changed');
     };
   }, [socket, id, user.id]);
 
@@ -140,17 +146,18 @@ const BattleArena = () => {
   const handleSubmit = async () => {
     if (!problem) return;
     setIsSubmitting(true);
+    setRunResults({ overallStatus: 'Submitting...' });
     try {
-      await axios.post('/api/submissions', {
+      const res = await axios.post('/api/submissions', {
         problemId: problem._id,
         languageId,
         code,
         battleId: id
       });
-      // The socket will give us the progress updates!
+      socket.emit('join_submission_room', res.data.submissionId);
     } catch (err) {
       console.error(err);
-    } finally {
+      setRunResults({ overallStatus: 'Error submitting code' });
       setIsSubmitting(false);
     }
   };
