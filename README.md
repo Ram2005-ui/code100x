@@ -1,14 +1,20 @@
 Code100x
+
+
 Code100x is a real-time competitive programming platform inspired by LeetCode and Codeforces. It features traditional coding problems, contests, and unique real-time 1v1 coding battles where users can race to solve challenges. The platform is augmented with AI capabilities to assist users during their learning journey.
 
 Features
+
 Real-Time 1v1 Battles: Matchmake with other users and compete head-to-head in live coding environments.
 Problem Solving & Submissions: Browse a curated list of coding problems, write code using an embedded VS Code-like editor (Monaco), and submit solutions.
 Live Status Updates: Receive real-time feedback on your code submissions (Running, Accepted, Failed) via WebSockets.
 Contests & Leaderboards: Participate in time-bound coding contests and climb the global leaderboards.
 AI Assistance: Get intelligent hints and code analysis powered by Groq.
 Secure Authentication: Traditional Email/Password login alongside seamless Google OAuth integration.
-🛠️ Tech Stack
+
+
+Tech Stack
+
 Frontend (Client)
 Framework: React 19 + Vite
 Styling: Tailwind CSS
@@ -24,6 +30,8 @@ Real-time: Socket.IO
 Authentication: JWT, bcrypt, Google Auth Library
 AI Integration: Groq SDK
 Email Service: Nodemailer
+
+
 Project Structure
 text
 
