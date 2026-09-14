@@ -1,4 +1,4 @@
-FROM node:18-bullseye
+FROM node:20-bookworm
 
 # Install Java, G++, and ensure Python3 is available
 RUN apt-get update && \
