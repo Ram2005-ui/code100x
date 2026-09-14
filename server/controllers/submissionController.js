@@ -21,43 +21,47 @@ const runCode = async (languageId, code, stdin, testCaseIndex = 0) => {
   const config = LANGUAGE_CONFIG[languageId];
   if (!config) throw new Error(`Unsupported language: ${languageId}`);
 
-  // Use Wandbox API for C++ and Java
+  // Use Piston API for C++ and Java (Wandbox is frequently down)
   if (config.useWandbox) {
     try {
-      console.log(`[Test ${testCaseIndex}] Running via Wandbox API`);
+      console.log(`[Test ${testCaseIndex}] Running via Piston API`);
       
-      // Wandbox Java hack: class cannot be public if file is named prog.java
       let finalCode = code;
+      let langStr = languageId === 62 ? 'java' : 'cpp';
+      let fileName = languageId === 62 ? 'Main.java' : 'main.cpp';
+
       if (languageId === 62) {
         finalCode = finalCode.replace(/public\s+class\s+Main/, 'class Main');
       }
 
-      const res = await fetch('https://wandbox.org/api/compile.json', {
+      const res = await fetch('https://emkc.org/api/v2/piston/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          compiler: config.compiler,
-          code: finalCode,
+          language: langStr,
+          version: '*',
+          files: [{ name: fileName, content: finalCode }],
           stdin: stdin || ''
         })
       });
       
       const data = await res.json();
       
-      if (data.status !== '0' && data.compiler_error) {
-        console.error(`[Test ${testCaseIndex}] Compilation error:`, data.compiler_error);
-        return { stdout: '', error: data.compiler_error, isCompilation: true };
-      }
-      if (data.status !== '0' && data.program_error) {
-        console.error(`[Test ${testCaseIndex}] Runtime error:`, data.program_error);
-        return { stdout: '', error: data.program_error, isCompilation: false };
+      if (data.compile && data.compile.code !== 0) {
+        console.error(`[Test ${testCaseIndex}] Compilation error:`, data.compile.stderr);
+        return { stdout: '', error: data.compile.stderr || data.compile.output, isCompilation: true };
       }
       
-      console.log(`[Test ${testCaseIndex}] stdout: ${data.program_output || '(empty)'}`);
-      return { stdout: data.program_output || '', error: null };
+      if (data.run && data.run.code !== 0) {
+        console.error(`[Test ${testCaseIndex}] Runtime error:`, data.run.stderr);
+        return { stdout: '', error: data.run.stderr || data.run.output, isCompilation: false };
+      }
+      
+      console.log(`[Test ${testCaseIndex}] stdout: ${data.run.stdout || '(empty)'}`);
+      return { stdout: data.run.stdout || '', error: null };
       
     } catch (err) {
-      console.error(`[Test ${testCaseIndex}] Wandbox API error:`, err);
+      console.error(`[Test ${testCaseIndex}] Piston API error:`, err);
       return { stdout: '', error: err.message, isCompilation: false };
     }
   }
