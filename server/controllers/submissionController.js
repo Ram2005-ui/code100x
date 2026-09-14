@@ -11,8 +11,8 @@ const Problem = require('../models/Problem');
 const LANGUAGE_CONFIG = {
   71:  { ext: 'py',   run: (f) => `python3 "${f}"` },
   63:  { ext: 'js',   run: (f) => `node "${f}"` },
-  54:  { ext: 'cpp',  compiler: 'gcc-head', useWandbox: true },
-  62:  { ext: 'java', compiler: 'openjdk-jdk-22+36', useWandbox: true },
+  54:  { ext: 'cpp',  compiled: true, run: (src, out) => `g++ -O2 "${src}" -o "${out}" && "${out}"` },
+  62:  { ext: 'java', java: true, run: (src, dir) => `javac "${src}" && java -cp "${dir}" Main` },
 };
 
 const normalize = (str) => (str || '').trim().replace(/\r\n/g, '\n');
@@ -21,52 +21,8 @@ const runCode = async (languageId, code, stdin, testCaseIndex = 0) => {
   const config = LANGUAGE_CONFIG[languageId];
   if (!config) throw new Error(`Unsupported language: ${languageId}`);
 
-  // Use Piston API for C++ and Java (Wandbox is frequently down)
-  if (config.useWandbox) {
-    try {
-      console.log(`[Test ${testCaseIndex}] Running via Piston API`);
-      
-      let finalCode = code;
-      let langStr = languageId === 62 ? 'java' : 'cpp';
-      let fileName = languageId === 62 ? 'Main.java' : 'main.cpp';
-
-      if (languageId === 62) {
-        finalCode = finalCode.replace(/public\s+class\s+Main/, 'class Main');
-      }
-
-      const res = await fetch('https://emkc.org/api/v2/piston/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          language: langStr,
-          version: '*',
-          files: [{ name: fileName, content: finalCode }],
-          stdin: stdin || ''
-        })
-      });
-      
-      const data = await res.json();
-      
-      if (data.compile && data.compile.code !== 0) {
-        console.error(`[Test ${testCaseIndex}] Compilation error:`, data.compile.stderr);
-        return { stdout: '', error: data.compile.stderr || data.compile.output, isCompilation: true };
-      }
-      
-      if (data.run && data.run.code !== 0) {
-        console.error(`[Test ${testCaseIndex}] Runtime error:`, data.run.stderr);
-        return { stdout: '', error: data.run.stderr || data.run.output, isCompilation: false };
-      }
-      
-      console.log(`[Test ${testCaseIndex}] stdout: ${data.run.stdout || '(empty)'}`);
-      return { stdout: data.run.stdout || '', error: null };
-      
-    } catch (err) {
-      console.error(`[Test ${testCaseIndex}] Piston API error:`, err);
-      return { stdout: '', error: err.message, isCompilation: false };
-    }
-  }
-
   // Execute everything locally since Render supports g++ for C++, node for JS, and python3 for Python.
+
 
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'code100x-'));
 
