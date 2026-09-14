@@ -222,6 +222,57 @@ const problems = [
       { input: '8', expectedOutput: '92\n', isHidden: true },
     ]
   },
+  {
+    title: 'Contains Duplicate',
+    difficulty: 'Easy',
+    description: `Given an integer array nums, return YES if any value appears at least twice in the array, and return NO if every element is distinct.\n\nInput:\nLine 1: N (array size)\nLine 2: N space-separated integers\n\nOutput:\nPrint YES or NO.`,
+    testCases: [
+      { input: '4\n1 2 3 1', expectedOutput: 'YES\n', isHidden: false },
+      { input: '4\n1 2 3 4', expectedOutput: 'NO\n', isHidden: false },
+      { input: '10\n1 1 1 3 3 4 3 2 4 2', expectedOutput: 'YES\n', isHidden: true },
+    ]
+  },
+  {
+    title: 'Missing Number',
+    difficulty: 'Easy',
+    description: `Given an array containing N distinct numbers taken from the range 0 to N, return the one number that is missing from the array.\n\nInput:\nLine 1: N\nLine 2: N space-separated integers\n\nOutput:\nPrint the missing number.`,
+    testCases: [
+      { input: '3\n3 0 1', expectedOutput: '2\n', isHidden: false },
+      { input: '2\n0 1', expectedOutput: '2\n', isHidden: false },
+      { input: '9\n9 6 4 2 3 5 7 0 1', expectedOutput: '8\n', isHidden: true },
+    ]
+  },
+  {
+    title: 'Climbing Stairs',
+    difficulty: 'Easy',
+    description: `You are climbing a staircase. It takes n steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?\n\nInput:\nA single integer N (1 ≤ N ≤ 45).\n\nOutput:\nPrint the number of distinct ways.`,
+    testCases: [
+      { input: '2', expectedOutput: '2\n', isHidden: false },
+      { input: '3', expectedOutput: '3\n', isHidden: false },
+      { input: '10', expectedOutput: '89\n', isHidden: true },
+    ]
+  },
+  {
+    title: 'Reverse Integer',
+    difficulty: 'Medium',
+    description: `Given a signed 32-bit integer x, return x with its digits reversed. If reversing x causes the value to go outside the signed 32-bit integer range [-2^31, 2^31 - 1], then return 0.\n\nInput:\nA single integer N.\n\nOutput:\nPrint the reversed integer.`,
+    testCases: [
+      { input: '123', expectedOutput: '321\n', isHidden: false },
+      { input: '-123', expectedOutput: '-321\n', isHidden: false },
+      { input: '120', expectedOutput: '21\n', isHidden: false },
+      { input: '1534236469', expectedOutput: '0\n', isHidden: true },
+    ]
+  },
+  {
+    title: 'Move Zeroes',
+    difficulty: 'Easy',
+    description: `Given an integer array nums, move all 0's to the end of it while maintaining the relative order of the non-zero elements.\n\nInput:\nLine 1: N\nLine 2: N space-separated integers\n\nOutput:\nPrint the array space-separated.`,
+    testCases: [
+      { input: '5\n0 1 0 3 12', expectedOutput: '1 3 12 0 0\n', isHidden: false },
+      { input: '1\n0', expectedOutput: '0\n', isHidden: false },
+      { input: '3\n1 2 3', expectedOutput: '1 2 3\n', isHidden: true },
+    ]
+  }
 ];
 
 const seed = async () => {
