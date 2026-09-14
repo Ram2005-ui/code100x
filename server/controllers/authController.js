@@ -160,7 +160,7 @@ exports.googleAuth = async (req, res) => {
     res.json({ token: jwtToken, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ message: 'Google authentication failed' });
+    res.status(500).json({ message: `Google authentication failed: ${err.message}` });
   }
 };
 
